@@ -201,6 +201,29 @@
             }
         }
     </style>
+
+    <!-- Firebase SDKs for App, Storage, and Firestore -->
+<script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCo8tDoVCOhrv9qNfP7NpGssQLUVjMvKZ4",
+    authDomain: "physio-exercises-a6a2b.firebaseapp.com",
+    projectId: "physio-exercises-a6a2b",
+    storageBucket: "physio-exercises-a6a2b.appspot.com",
+    messagingSenderId: "869979810354",
+    appId: "1:869979810354:web:b455148960c83353ff2a2b",
+    measurementId: "G-WB5JCZCV6P"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const storage = firebase.storage();
+  const db = firebase.firestore();
+</script>
+
+
 </head>
 <body>
     <h1>Physiotherapy Exercise Prescription</h1>
