@@ -333,11 +333,13 @@
                 // Log before appending card
                 console.log('Appending exercise card to grid');
                 exerciseGrid.appendChild(card);
-                // Upload to Firebase
-                storageRef.put(file).then(snapshot => {
-                    card.dataset.filePath = filePath;
-                    // Delete button logic moved here so it is only bound after upload and filePath is set
-                    card.querySelector(`#delete-${uniqueId}`).addEventListener('click', () => {
+            // Upload to Firebase
+            storageRef.put(file).then(snapshot => {
+                card.dataset.filePath = filePath;
+                // Delete button logic: ensure the card being removed is the one currently displayed
+                const deleteBtn = card.querySelector(`#delete-${uniqueId}`);
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', () => {
                         if (confirm('Delete this exercise?')) {
                             storage.ref(card.dataset.filePath).delete().then(() => {
                                 console.log("Deleted from Firebase:", card.dataset.filePath);
@@ -345,9 +347,10 @@
                             card.remove();
                         }
                     });
-                }).catch(error => {
-                    console.error("Upload failed:", error);
-                });
+                }
+            }).catch(error => {
+                console.error("Upload failed:", error);
+            });
             };
             try {
                 reader.readAsDataURL(file);
@@ -365,7 +368,8 @@
             const name = patientName.value || 'Patient';
             const exerciseCount = exerciseGrid.children.length;
             const timestamp = new Date().getTime();
-            const url = `https://physio-exercises.example.com/program/${name.replace(/\s+/g, '-').toLowerCase()}-${timestamp}?exercises=${exerciseCount}`;
+            // Use actual window.location.origin and new path for program URL
+            const url = `${window.location.origin}/programs/${name.replace(/\s+/g, '-').toLowerCase()}-${timestamp}`;
             urlDisplay.textContent = url;
             qrcodeContainer.innerHTML = '';
             new QRCode(qrcodeContainer, {
