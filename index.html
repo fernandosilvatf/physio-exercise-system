@@ -296,6 +296,10 @@
 
         // Create exercise card and upload to Firebase
         function createExerciseCard(file) {
+            if (!patientName.value.trim()) {
+                showMessage('Please enter a patient name before uploading exercises.', 'error');
+                return;
+            }
             const card = document.createElement('div');
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -332,17 +336,17 @@
                 // Upload to Firebase
                 storageRef.put(file).then(snapshot => {
                     card.dataset.filePath = filePath;
+                    // Delete button logic moved here so it is only bound after upload and filePath is set
+                    card.querySelector(`#delete-${uniqueId}`).addEventListener('click', () => {
+                        if (confirm('Delete this exercise?')) {
+                            storage.ref(card.dataset.filePath).delete().then(() => {
+                                console.log("Deleted from Firebase:", card.dataset.filePath);
+                            }).catch(err => console.error("Delete error:", err));
+                            card.remove();
+                        }
+                    });
                 }).catch(error => {
                     console.error("Upload failed:", error);
-                });
-                // Delete button
-                card.querySelector(`#delete-${uniqueId}`).addEventListener('click', () => {
-                    if (confirm('Delete this exercise?')) {
-                        storage.ref(card.dataset.filePath).delete().then(() => {
-                            console.log("Deleted from Firebase:", card.dataset.filePath);
-                        }).catch(err => console.error("Delete error:", err));
-                        card.remove();
-                    }
                 });
             };
             try {
