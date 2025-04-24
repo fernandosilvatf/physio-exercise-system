@@ -339,7 +339,7 @@
             reader.readAsDataURL(file);
         }
 
-        // Generate QR code
+        // Generate QR code and save data to Firestore
         generateBtn.addEventListener('click', function() {
             if (exerciseGrid.children.length === 0) {
                 showMessage('Please add at least one exercise before generating QR code', 'error');
@@ -360,7 +360,32 @@
                 correctLevel: QRCode.CorrectLevel.L
             });
             qrSection.classList.remove('hidden');
-            showMessage('QR Code generated successfully!', 'success');
+
+            // Collect exercise data and save to Firestore
+            const exercisesData = [];
+            Array.from(exerciseGrid.children).forEach(card => {
+                const setsInput = card.querySelector('.sets-input');
+                const repsInput = card.querySelector('.reps-input');
+                const commentsInput = card.querySelector('.comments-input');
+                exercisesData.push({
+                    sets: setsInput ? Number(setsInput.value) || 0 : 0,
+                    reps: repsInput ? Number(repsInput.value) || 0 : 0,
+                    comments: commentsInput ? commentsInput.value : '',
+                    filePath: card.dataset.filePath || ''
+                });
+            });
+            const patientDocId = name.replace(/\s+/g, '_').toLowerCase() + '_' + timestamp;
+            db.collection('patients').doc(patientDocId).set({
+                name: name,
+                timestamp: timestamp,
+                exercises: exercisesData,
+                url: url
+            }).then(() => {
+                showMessage('QR Code generated successfully and data saved!', 'success');
+            }).catch(err => {
+                console.error("Error saving to Firestore:", err);
+                showMessage('Error saving data. Please try again.', 'error');
+            });
         });
 
         // Download QR code image
@@ -383,15 +408,6 @@
             qrcodeContainer.innerHTML = '';
             gifUpload.value = '';
             urlDisplay.textContent = '';
-            const patient = (patientName.value || 'unknown').replace(/\s+/g, '_');
-            const storageRef = storage.ref(`exercises/${patient}`);
-            storageRef.listAll().then(res => {
-                res.items.forEach(itemRef => {
-                    itemRef.delete().then(() => {
-                        console.log(`🗑️ Deleted from Firebase: ${itemRef.fullPath}`);
-                    }).catch(err => console.error("❌ Delete error:", err));
-                });
-            });
             messageElement.classList.add('hidden');
         });
 
@@ -407,8 +423,3 @@
     });
     </script>
 </body></html>
-                    };
-                
-                    reader.readAsDataURL(file);
-                }
-            }
