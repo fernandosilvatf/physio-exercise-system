@@ -279,6 +279,11 @@
         // Handle file uploads
         gifUpload.addEventListener('change', function(e) {
             const files = Array.from(e.target.files);
+            // Logging selected files
+            console.log('Selected files:', files);
+            files.forEach(file => {
+                console.log('Processing file:', file.name, 'type:', file.type);
+            });
             if (!files.length) return;
             files.forEach(file => {
                 if (!file.type.match('image.*')) {
@@ -293,6 +298,8 @@
         function createExerciseCard(file) {
             const reader = new FileReader();
             reader.onload = function(e) {
+                // File loaded log
+                console.log('File loaded successfully:', file.name);
                 const card = document.createElement('div');
                 card.className = 'exercise-card';
                 const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
@@ -319,6 +326,8 @@
                     </div>
                     <button class="reset-btn delete-btn" id="delete-${uniqueId}">🗑️ Delete</button>
                 `;
+                // Log before appending card
+                console.log('Appending exercise card to grid');
                 exerciseGrid.appendChild(card);
                 // Upload to Firebase
                 storageRef.put(file).then(snapshot => {
@@ -336,7 +345,11 @@
                     }
                 });
             };
-            reader.readAsDataURL(file);
+            try {
+                reader.readAsDataURL(file);
+            } catch (err) {
+                console.error("Failed to read file:", err);
+            }
         }
 
         // Generate QR code and save data to Firestore
