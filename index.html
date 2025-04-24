@@ -258,180 +258,157 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const uploadBtn = document.getElementById('uploadBtn');
-            const gifUpload = document.getElementById('gifUpload');
-            const exerciseGrid = document.getElementById('exerciseGrid');
-            const generateBtn = document.getElementById('generateBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            const qrSection = document.getElementById('qrSection');
-            const qrcodeContainer = document.getElementById('qrcode');
-            const patientName = document.getElementById('patientName');
-            const messageElement = document.getElementById('message');
-            const urlDisplay = document.getElementById('urlDisplay');
-            const downloadQRBtn = document.getElementById('downloadQRBtn');
-            
-            // Handle file selection button
-            uploadBtn.addEventListener('click', function() {
-                gifUpload.click();
-            });
-            
-            // Process uploaded image files
-            gifUpload.addEventListener('change', function(e) {
-                const files = e.target.files;
-                
-                if (files.length === 0) return;
-                
-                // Process each selected file
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    
-                    // Only process image files
-                    if (!file.type.match('image.*')) {
-                        showMessage('Only image files are allowed', 'error');
-                        continue;
-                    }
-                    
-                    // Create a card for each exercise
-                    createExerciseCard(file);
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadBtn = document.getElementById('uploadBtn');
+        const gifUpload = document.getElementById('gifUpload');
+        const exerciseGrid = document.getElementById('exerciseGrid');
+        const generateBtn = document.getElementById('generateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const qrSection = document.getElementById('qrSection');
+        const qrcodeContainer = document.getElementById('qrcode');
+        const patientName = document.getElementById('patientName');
+        const messageElement = document.getElementById('message');
+        const urlDisplay = document.getElementById('urlDisplay');
+        const downloadQRBtn = document.getElementById('downloadQRBtn');
+
+        // File selection button
+        uploadBtn.addEventListener('click', function() {
+            gifUpload.click();
+        });
+
+        // Handle file uploads
+        gifUpload.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            files.forEach(file => {
+                if (!file.type.match('image.*')) {
+                    showMessage('Only image files are allowed', 'error');
+                    return;
                 }
+                createExerciseCard(file);
             });
-            
-            // Create an exercise card with the uploaded image
-            function createExerciseCard(file) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {function createExerciseCard(file) {
-                    const reader = new FileReader();
-                
-                    reader.onload = function(e) {
-                        const card = document.createElement('div');
-                        card.className = 'exercise-card';
-                        const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
-                        const patient = (document.getElementById('patientName').value || 'unknown').replace(/\s+/g, '_');
-                        const filePath = `exercises/${patient}/${file.name}`;
-                        const storageRef = storage.ref(filePath);
-                
-                        card.innerHTML = `
-                            <div class="gif-container">
-                                <img src="${e.target.result}" alt="Exercise">
-                            </div>
-                            <div class="exercise-info">
-                                <div>
-                                    <label for="sets-${uniqueId}">Sets:</label>
-                                    <input type="number" id="sets-${uniqueId}" class="sets-input" min="0">
-                                </div>
-                                <div>
-                                    <label for="reps-${uniqueId}">Reps:</label>
-                                    <input type="number" id="reps-${uniqueId}" class="reps-input" min="0">
-                                </div>
-                            </div>
-                            <div class="exercise-comments">
-                                <label for="comments-${uniqueId}">Comments:</label>
-                                <textarea id="comments-${uniqueId}" class="comments-input" rows="3"></textarea>
-                            </div>
-                            <button class="reset-btn delete-btn" id="delete-${uniqueId}">🗑️ Delete</button>
-                        `;
-                
-                        exerciseGrid.appendChild(card);
-                
-                        // Upload to Firebase
-                        storageRef.put(file).then(snapshot => {
-                            card.dataset.filePath = filePath; // Save path for deletion later
-                            console.log(`✅ Uploaded: ${filePath}`);
-                        }).catch(error => {
-                            console.error("❌ Upload failed:", error);
-                        });
-                
-                        // Delete button behavior
-                        card.querySelector(`#delete-${uniqueId}`).addEventListener('click', () => {
-                            if (confirm('Delete this exercise?')) {
-                                // Delete from Firebase Storage
-                                storage.ref(card.dataset.filePath).delete().then(() => {
-                                    console.log("🗑️ Deleted from Firebase:", card.dataset.filePath);
-                                }).catch(err => console.error("❌ Delete error:", err));
-                
-                                // Remove from page
-                                card.remove();
-                            }
-                        });
+        });
+
+        // Create exercise card and upload to Firebase
+        function createExerciseCard(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const card = document.createElement('div');
+                card.className = 'exercise-card';
+                const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
+                const patient = (patientName.value || 'unknown').replace(/\s+/g, '_');
+                const filePath = `exercises/${patient}/${file.name}`;
+                const storageRef = storage.ref(filePath);
+                card.innerHTML = `
+                    <div class="gif-container">
+                        <img src="${e.target.result}" alt="Exercise">
+                    </div>
+                    <div class="exercise-info">
+                        <div>
+                            <label for="sets-${uniqueId}">Sets:</label>
+                            <input type="number" id="sets-${uniqueId}" class="sets-input" min="0">
+                        </div>
+                        <div>
+                            <label for="reps-${uniqueId}">Reps:</label>
+                            <input type="number" id="reps-${uniqueId}" class="reps-input" min="0">
+                        </div>
+                    </div>
+                    <div class="exercise-comments">
+                        <label for="comments-${uniqueId}">Comments:</label>
+                        <textarea id="comments-${uniqueId}" class="comments-input" rows="3"></textarea>
+                    </div>
+                    <button class="reset-btn delete-btn" id="delete-${uniqueId}">🗑️ Delete</button>
+                `;
+                exerciseGrid.appendChild(card);
+                // Upload to Firebase
+                storageRef.put(file).then(snapshot => {
+                    card.dataset.filePath = filePath;
+                }).catch(error => {
+                    console.error("Upload failed:", error);
+                });
+                // Delete button
+                card.querySelector(`#delete-${uniqueId}`).addEventListener('click', () => {
+                    if (confirm('Delete this exercise?')) {
+                        storage.ref(card.dataset.filePath).delete().then(() => {
+                            console.log("Deleted from Firebase:", card.dataset.filePath);
+                        }).catch(err => console.error("Delete error:", err));
+                        card.remove();
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Generate QR code
+        generateBtn.addEventListener('click', function() {
+            if (exerciseGrid.children.length === 0) {
+                showMessage('Please add at least one exercise before generating QR code', 'error');
+                return;
+            }
+            const name = patientName.value || 'Patient';
+            const exerciseCount = exerciseGrid.children.length;
+            const timestamp = new Date().getTime();
+            const url = `https://physio-exercises.example.com/program/${name.replace(/\s+/g, '-').toLowerCase()}-${timestamp}?exercises=${exerciseCount}`;
+            urlDisplay.textContent = url;
+            qrcodeContainer.innerHTML = '';
+            new QRCode(qrcodeContainer, {
+                text: url,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+            qrSection.classList.remove('hidden');
+            showMessage('QR Code generated successfully!', 'success');
+        });
+
+        // Download QR code image
+        downloadQRBtn.addEventListener('click', function() {
+            const qrImg = qrcodeContainer.querySelector('img');
+            if (qrImg) {
+                const name = patientName.value || 'patient';
+                const link = document.createElement('a');
+                link.download = `exercise-program-${name}-qr.png`;
+                link.href = qrImg.src;
+                link.click();
+            }
+        });
+
+        // Reset all fields and uploaded files
+        resetBtn.addEventListener('click', function() {
+            exerciseGrid.innerHTML = '';
+            patientName.value = '';
+            qrSection.classList.add('hidden');
+            qrcodeContainer.innerHTML = '';
+            gifUpload.value = '';
+            urlDisplay.textContent = '';
+            const patient = (patientName.value || 'unknown').replace(/\s+/g, '_');
+            const storageRef = storage.ref(`exercises/${patient}`);
+            storageRef.listAll().then(res => {
+                res.items.forEach(itemRef => {
+                    itemRef.delete().then(() => {
+                        console.log(`🗑️ Deleted from Firebase: ${itemRef.fullPath}`);
+                    }).catch(err => console.error("❌ Delete error:", err));
+                });
+            });
+            messageElement.classList.add('hidden');
+        });
+
+        // Show message
+        function showMessage(text, type) {
+            messageElement.textContent = text;
+            messageElement.className = `message ${type}`;
+            messageElement.classList.remove('hidden');
+            setTimeout(() => {
+                messageElement.classList.add('hidden');
+            }, 5000);
+        }
+    });
+    </script>
+</body></html>
                     };
                 
                     reader.readAsDataURL(file);
                 }
-            
-            // Generate QR code with a fictitious URL
-            generateBtn.addEventListener('click', function() {
-                // Check if there are any exercises
-                if (exerciseGrid.children.length === 0) {
-                    showMessage('Please add at least one exercise before generating QR code', 'error');
-                    return;
-                }
-                
-                // Get patient name
-                const name = patientName.value || 'Patient';
-                
-                // Count the number of exercises
-                const exerciseCount = exerciseGrid.children.length;
-                
-                // Create a fictitious URL for the QR code
-                const timestamp = new Date().getTime();
-                const url = `https://physio-exercises.example.com/program/${name.replace(/\s+/g, '-').toLowerCase()}-${timestamp}?exercises=${exerciseCount}`;
-                
-                // Display the URL
-                urlDisplay.textContent = url;
-                
-                // Generate QR code
-                qrcodeContainer.innerHTML = '';
-                new QRCode(qrcodeContainer, {
-                    text: url,
-                    width: 256,
-                    height: 256,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.L
-                });
-                
-                // Show QR code section
-                qrSection.classList.remove('hidden');
-                showMessage('QR Code generated successfully!', 'success');
-            });
-            
-            // Download QR code as image
-            downloadQRBtn.addEventListener('click', function() {
-                const qrImg = qrcodeContainer.querySelector('img');
-                if (qrImg) {
-                    const name = patientName.value || 'patient';
-                    const link = document.createElement('a');
-                    link.download = `exercise-program-${name}-qr.png`;
-                    link.href = qrImg.src;
-                    link.click();
-                }
-            });
-            
-            // Reset all fields and uploaded files
-            resetBtn.addEventListener('click', function() {
-                exerciseGrid.innerHTML = '';
-                patientName.value = '';
-                qrSection.classList.add('hidden');
-                qrcodeContainer.innerHTML = '';
-                gifUpload.value = '';
-                urlDisplay.textContent = '';
-                messageElement.classList.add('hidden');
-            });
-            
-            // Show message function
-            function showMessage(text, type) {
-                messageElement.textContent = text;
-                messageElement.className = `message ${type}`;
-                messageElement.classList.remove('hidden');
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    messageElement.classList.add('hidden');
-                }, 5000);
             }
-        });
-    </script>
-</body>
-</html>
