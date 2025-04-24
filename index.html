@@ -296,11 +296,11 @@
 
         // Create exercise card and upload to Firebase
         function createExerciseCard(file) {
+            const card = document.createElement('div');
             const reader = new FileReader();
             reader.onload = function(e) {
                 // File loaded log
                 console.log('File loaded successfully:', file.name);
-                const card = document.createElement('div');
                 card.className = 'exercise-card';
                 const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
                 const patient = (patientName.value || 'unknown').replace(/\s+/g, '_');
