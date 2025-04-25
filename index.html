@@ -375,7 +375,8 @@
             const exerciseCount = exerciseGrid.children.length;
             const timestamp = new Date().getTime();
             // Use actual window.location.origin and new path for program URL
-            const url = `${window.location.origin}/programs/${name.replace(/\s+/g, '-').toLowerCase()}-${timestamp}`;
+            const basePath = window.location.origin + window.location.pathname.replace(/\/$/, '');
+            const url = `${basePath}/programs/${name.replace(/\s+/g, '-').toLowerCase()}-${timestamp}`;
             urlDisplay.textContent = url;
             qrcodeContainer.innerHTML = '';
             new QRCode(qrcodeContainer, {
