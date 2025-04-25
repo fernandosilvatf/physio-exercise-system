@@ -336,6 +336,12 @@
             // Upload to Firebase
             storageRef.put(file).then(snapshot => {
                 card.dataset.filePath = filePath;
+                snapshot.ref.getDownloadURL().then(url => {
+                    const imgTag = card.querySelector('img');
+                    if (imgTag) {
+                        imgTag.src = url;
+                    }
+                });
                 // Delete button logic: ensure the card being removed is the one currently displayed
                 const deleteBtn = card.querySelector(`#delete-${uniqueId}`);
                 if (deleteBtn) {
