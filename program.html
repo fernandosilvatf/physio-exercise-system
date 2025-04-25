@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exercise Program</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .exercise {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+    .exercise img {
+      max-width: 100%;
+      display: block;
+      margin: auto;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCo8tDoVCOhrv9qNfP7NpGssQLUVjMvKZ4",
+      authDomain: "physio-exercises-a6a2b.firebaseapp.com",
+      projectId: "physio-exercises-a6a2b",
+      storageBucket: "physio-exercises-a6a2b.appspot.com",
+      messagingSenderId: "869979810354",
+      appId: "1:869979810354:web:b455148960c83353ff2a2b",
+      measurementId: "G-WB5JCZCV6P"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      if (!id) {
+        document.body.innerHTML = "<h1>No patient ID provided</h1>";
+        return;
+      }
+      const doc = await db.collection("patients").doc(id).get();
+      if (!doc.exists) {
+        document.body.innerHTML = "<h1>Program not found</h1>";
+        return;
+      }
+      const data = doc.data();
+      document.body.innerHTML = `<h1>${data.name}'s Program</h1>`;
+      data.exercises.forEach(ex => {
+        const div = document.createElement("div");
+        div.className = "exercise";
+        div.innerHTML = `
+          <img src="https://firebasestorage.googleapis.com/v0/b/physio-exercises-a6a2b.appspot.com/o/${encodeURIComponent(ex.filePath)}?alt=media" alt="Exercise GIF">
+          <p><strong>Sets:</strong> ${ex.sets}</p>
+          <p><strong>Reps:</strong> ${ex.reps}</p>
+          <p><strong>Comments:</strong> ${ex.comments}</p>
+        `;
+        document.body.appendChild(div);
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>Loading...</h1>
+</body>
+</html>

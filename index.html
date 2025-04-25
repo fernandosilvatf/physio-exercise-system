@@ -376,7 +376,7 @@
             const timestamp = new Date().getTime();
             // Use actual window.location.origin and new path for program URL
             const basePath = window.location.origin + window.location.pathname.replace(/\/$/, '');
-            const url = `${basePath}/programs/${name.replace(/\s+/g, '-').toLowerCase()}-${timestamp}`;
+            const url = `${basePath}/program.html?id=${name.replace(/\s+/g, '_').toLowerCase()}_${timestamp}`;
             urlDisplay.textContent = url;
             qrcodeContainer.innerHTML = '';
             new QRCode(qrcodeContainer, {
