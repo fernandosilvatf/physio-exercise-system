@@ -307,8 +307,11 @@
                 console.log('File loaded successfully:', file.name);
                 card.className = 'exercise-card';
                 const uniqueId = Date.now() + Math.floor(Math.random() * 1000);
-                const patient = (patientName.value || 'unknown').replace(/\s+/g, '_');
-                const filePath = `exercises/${patient}/${file.name}`;
+                // Use the same patientID logic as in generateBtn (if available)
+                const name = patientName.value.trim();
+                const timestamp = window.__lastPatientTimestamp || new Date().getTime();
+                const patientID = name.replace(/\s+/g, '_').toLowerCase() + '_' + timestamp;
+                const filePath = `exercises/${patientID}/${file.name}`;
                 const storageRef = storage.ref(filePath);
                 card.innerHTML = `
                     <div class="gif-container">
@@ -371,12 +374,17 @@
                 showMessage('Please add at least one exercise before generating QR code', 'error');
                 return;
             }
-            const name = patientName.value || 'Patient';
-            const exerciseCount = exerciseGrid.children.length;
+            const name = patientName.value.trim();
+            if (!name) {
+                showMessage('Please enter a patient name.', 'error');
+                return;
+            }
             const timestamp = new Date().getTime();
-            // Use actual window.location.origin and new path for program URL
+            // Store the timestamp globally for use in createExerciseCard
+            window.__lastPatientTimestamp = timestamp;
+            const patientID = name.replace(/\s+/g, '_').toLowerCase() + '_' + timestamp;
             const basePath = window.location.origin + '/physio-exercise-system';
-            const url = `${basePath}/program.html?id=${name.replace(/\s+/g, '_').toLowerCase()}_${timestamp}`;
+            const url = `${basePath}/program.html?id=${patientID}`;
             urlDisplay.textContent = url;
             qrcodeContainer.innerHTML = '';
             new QRCode(qrcodeContainer, {
@@ -402,8 +410,7 @@
                     filePath: card.dataset.filePath || ''
                 });
             });
-            const patientDocId = name.replace(/\s+/g, '_').toLowerCase() + '_' + timestamp;
-            db.collection('patients').doc(patientDocId).set({
+            db.collection('patients').doc(patientID).set({
                 name: name,
                 timestamp: timestamp,
                 exercises: exercisesData,
