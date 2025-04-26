@@ -2,36 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Exercise Program</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Exercise Program</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
       max-width: 800px;
       margin: auto;
-      background: #f9f9f9;
+      padding: 20px;
     }
     h1 {
       text-align: center;
-      color: #2c3e50;
     }
     .exercise {
-      background: white;
-      border: 1px solid #ddd;
+      border: 1px solid #ccc;
       padding: 15px;
-      margin: 10px 0;
+      margin-bottom: 10px;
       border-radius: 8px;
     }
-    .exercise img {
-      max-width: 100%;
-      display: block;
-      margin: auto;
+    .exercise input, .exercise textarea {
+      width: 100%;
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+    #uploadBtn {
+      padding: 10px 20px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
     }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</head>
+<body>
+  <h1>Upload Exercise Program</h1>
+  <label>Patient Name: <input type="text" id="patientName"></label>
+  <div id="exerciseList"></div>
+  <button onclick="addExercise()">+ Add Exercise</button>
+  <br><br>
+  <button id="uploadBtn">Upload Program</button>
+  <p id="status"></p>
+  <div id="qrContainer" style="text-align: center; margin-top: 20px;"></div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCo8tDoVCOhrv9qNfP7NpGssQLUVjMvKZ4",
@@ -46,35 +69,65 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
-      if (!id) {
-        document.body.innerHTML = "<h1>No patient ID provided</h1>";
-        return;
-      }
-      const doc = await db.collection("patients").doc(id).get();
-      if (!doc.exists) {
-        document.body.innerHTML = "<h1>Program not found</h1>";
-        return;
-      }
-      const data = doc.data();
-      document.body.innerHTML = `<h1>${data.name}'s Program</h1>`;
-      data.exercises.forEach(ex => {
-        const div = document.createElement("div");
-        div.className = "exercise";
-        div.innerHTML = `
-          <img src="https://firebasestorage.googleapis.com/v0/b/physio-exercises-a6a2b.appspot.com/o/${encodeURIComponent(ex.filePath)}?alt=media" alt="Exercise GIF">
-          <p><strong>Sets:</strong> ${ex.sets}</p>
-          <p><strong>Reps:</strong> ${ex.reps}</p>
-          <p><strong>Comments:</strong> ${ex.comments}</p>
-        `;
-        document.body.appendChild(div);
+    function addExercise() {
+      const div = document.createElement('div');
+      div.className = 'exercise';
+      div.innerHTML = `
+        <label>GIF File: <input type="file" accept="image/gif"></label><br>
+        <label>Sets: <input type="number" class="sets"></label>
+        <label>Reps: <input type="number" class="reps"></label>
+        <label>Comments: <textarea class="comments"></textarea></label>
+      `;
+      document.getElementById('exerciseList').appendChild(div);
+    }
+
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+      const name = document.getElementById('patientName').value.trim();
+      if (!name) return alert('Please enter a patient name');
+
+      const timestamp = Date.now();
+      const patientID = name.replace(/\s+/g, '_').toLowerCase() + '_' + timestamp;
+      const exerciseBlocks = document.querySelectorAll('.exercise');
+      const exercises = [];
+
+      const uploads = Array.from(exerciseBlocks).map(async (block, i) => {
+        const fileInput = block.querySelector('input[type="file"]');
+        const sets = block.querySelector('.sets').value;
+        const reps = block.querySelector('.reps').value;
+        const comments = block.querySelector('.comments').value;
+        const file = fileInput.files[0];
+
+        if (!file) return;
+        const filePath = `exercises/${patientID}/${file.name}`;
+        const ref = storage.ref(filePath);
+        await ref.put(file);
+
+        exercises.push({ filePath, sets: Number(sets), reps: Number(reps), comments });
       });
+
+      try {
+        await Promise.all(uploads);
+        await db.collection('patients').doc(patientID).set({ name, timestamp, exercises });
+
+        const programURL = `https://fernandosilvatf.github.io/physio-exercise-system/program.html?id=${patientID}`;
+        document.getElementById('status').innerText = '✅ Program uploaded!';
+        QRCode.toCanvas(document.createElement('canvas'), programURL, (err, canvas) => {
+          if (!err) {
+            const container = document.getElementById('qrContainer');
+            container.innerHTML = `<p>Scan QR to view program:</p>`;
+            container.appendChild(canvas);
+            const link = document.createElement('p');
+            link.innerHTML = `<a href="${programURL}" target="_blank">${programURL}</a>`;
+            container.appendChild(link);
+          }
+        });
+      } catch (e) {
+        console.error(e);
+        document.getElementById('status').innerText = '❌ Upload failed';
+      }
     });
+
+    addExercise(); // Start with one
   </script>
-</head>
-<body>
-  <h1>Loading...</h1>
 </body>
 </html>
