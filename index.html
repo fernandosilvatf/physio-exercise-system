@@ -273,6 +273,10 @@
 
         // File selection button
         uploadBtn.addEventListener('click', function() {
+            if (!patientName.value.trim()) {
+                alert('Please enter the patient\'s name before selecting exercises!');
+                return;
+            }
             gifUpload.click();
         });
 
@@ -458,28 +462,3 @@
     });
     </script>
 </body></html>
-
-    // --- Patient Program Loader for program.html ---
-    // If this is program.html, attempt to fetch and render the patient's program
-    if (window.location.pathname.endsWith('program.html')) {
-        // Extract id from URL
-        function getQueryParam(param) {
-            const params = new URLSearchParams(window.location.search);
-            return params.get(param);
-        }
-        const id = getQueryParam('id');
-        if (id) {
-            db.collection("patients").doc(id).get().then((doc) => {
-                if (doc.exists) {
-                    // existing rendering logic (to be implemented)
-                    // For now, just show a placeholder
-                    document.body.innerHTML = "<h2 style='text-align:center;margin-top:40px;'>Exercise Program Loaded</h2>";
-                } else {
-                    document.body.innerHTML = "<p style='text-align:center; margin-top: 50px; font-size: 20px;'>No program found for this link. Please check with your physiotherapist.</p>";
-                }
-            }).catch((error) => {
-                console.error("Error loading program:", error);
-                document.body.innerHTML = "<p style='text-align:center; margin-top: 50px; font-size: 20px;'>Unable to load the program. Please check your internet connection and try again.</p>";
-            });
-        }
-    }
